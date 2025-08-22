@@ -26,6 +26,11 @@ source.include_exts = py,png,jpg,kv,atlas
 # (list) List of directory to exclude (let empty to not exclude anything)
 #source.exclude_dirs = tests, bin, venv
 
+
+# (list) Source directories to include (let empty to include all directories)
+source.include_dirs = assets
+
+
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
 #source.exclude_patterns = license,images/*/*.jpg
@@ -88,7 +93,7 @@ fullscreen = 0
 
 # (str) Splash screen filename. This is the screen that will be shown
 # when your app is loading.
-splash.filename = assets/images/splash.png
+splash.filename = assets/images/optimal_logo.png
 
 
 # (string) Presplash animation using Lottie format.
