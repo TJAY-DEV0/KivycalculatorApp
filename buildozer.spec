@@ -93,7 +93,7 @@ fullscreen = 0
 
 # (str) Splash screen filename. This is the screen that will be shown
 # when your app is loading.
-splash.filename = assets/images/optimal_logo.png
+splash.filename = assets/images/optimal_logo.jpg
 
 
 # (string) Presplash animation using Lottie format.
