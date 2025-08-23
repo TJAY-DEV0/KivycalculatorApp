@@ -633,11 +633,23 @@ class ModernCalculator(App):
 
     def on_resume(self):
         store = JsonStore('app_state.json')
-        if store.exists('state'):
-            saved_state = store.get('state')
-            main_layout = self.root.get_screen('Main').main_layout
-            main_layout.text_input.text_input.text = saved_state['input_text']
-            print("App resumed, state restored.")
+        
+        try:
+            if store.exists('state'):
+                saved_state = store.get('state')
+                main_layout = self.root.get_screen('Main').main_layout
+                main_layout.text_input.text_input.text = saved_state['input_text']
+                print("App resumed, state restored.")
+            else:
+                print("No state to restore.")
+        except Exception as e:
+            # If the file is corrupted, this will catch the error
+            print(f"Error restoring app state: {e}")
+            # Optionally, delete the corrupted file to start fresh on the next run
+            store.clear()
+            
+        return True
+
         
 if __name__ == '__main__':
     ModernCalculator().run()
