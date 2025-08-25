@@ -14,8 +14,11 @@ package.domain = org.test
 source.dir = .
 
 
-# (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas
+# (list) The file extensions to include in the build, comma separated.
+source.include_exts = py,png,jpg,kv,atlas,json
+
+# (list) The directories to include in the build, comma separated.
+source.include_dirs = assets,check,files,others,switch
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
