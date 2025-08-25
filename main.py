@@ -632,9 +632,8 @@ class ModernCalculator(App):
         return True 
 
     def on_resume(self):
-        store = JsonStore('app_state.json')
-        
         try:
+            store = JsonStore('app_state.json')
             if store.exists('state'):
                 saved_state = store.get('state')
                 main_layout = self.root.get_screen('Main').main_layout
@@ -643,9 +642,8 @@ class ModernCalculator(App):
             else:
                 print("No state to restore.")
         except Exception as e:
-            # If the file is corrupted, this will catch the error
             print(f"Error restoring app state: {e}")
-            # Optionally, delete the corrupted file to start fresh on the next run
+            # This is a critical step: clear the corrupted store to avoid future crashes
             store.clear()
             
         return True
