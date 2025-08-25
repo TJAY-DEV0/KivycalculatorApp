@@ -2,44 +2,29 @@ name: Android Build
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Set up Python and Java 17
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
-      - name: Install Buildozer and Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git openjdk-17-jdk zlib1g-dev unzip
-          pip install --upgrade pip
-          pip install buildozer cython
+          
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Fix p4a branch and settings
-        run: |
-          sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
-          sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
-          sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-          sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
-
+      - name: Install dependencies
+        run: pip install buildozer
+        
       - name: Clean Buildozer cache and build
         run: |
-          rm -rf .buildozer/
-          buildozer -v android debug --clean
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-app-apk
-          path: bin/*.apk
+          buildozer android clean
+          buildozer android debug
