@@ -338,8 +338,6 @@ android.allow_backup = True
 # (str) python-for-android branch to use, defaults to master
 
 
-[buildozer]
-
 # The P4A branch to use
 p4a.branch = develop
 
