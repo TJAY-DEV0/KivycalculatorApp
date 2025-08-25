@@ -43,8 +43,8 @@ version = 0.1
 # version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
-# comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.10.13,kivy,kivymd,cython 
+# comma separated e.g. requirements = openssl,kivy
+requirements = kivy,kivymd,cython
 
 
 
