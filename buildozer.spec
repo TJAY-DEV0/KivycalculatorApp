@@ -91,16 +91,15 @@ fullscreen = 0
 # olive, purple, silver, teal.
 #android.presplash_color = #FFFFFF
 
-# (str) Splash screen filename. This is the screen that will be shown
-# when your app is loading.
-splash.filename = assets/images/optimal_logo.jpg
-
 
 # (string) Presplash animation using Lottie format.
 # see https://lottiefiles.com/ for examples and https://airbnb.design/lottie/
 # for general documentation.
 # Lottie files can be created using various tools, like Adobe After Effect or Synfig.
 #android.presplash_lottie = "path/to/lottie/file.json"
+
+android.presplash_filename = assets/images/optimal_logo.jpg
+
 
 # (str) Adaptive icon of the application (used if Android API level is 26+ at runtime)
 #icon.adaptive_foreground.filename = %(source.dir)s/data/icon_fg.png
