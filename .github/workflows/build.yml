@@ -24,7 +24,5 @@ jobs:
       - name: Install dependencies
         run: pip install buildozer
         
-      - name: Clean Buildozer cache and build
-        run: |
-          buildozer android clean
-          buildozer android debug
+      - name: Build and deploy
+        run: buildozer android debug
