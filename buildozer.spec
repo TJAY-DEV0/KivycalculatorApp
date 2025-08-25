@@ -30,10 +30,6 @@ source.include_dirs = assets,check,files,others,switch
 #source.exclude_dirs = tests, bin, venv
 
 
-# (list) Source directories to include (let empty to include all directories)
-source.include_dirs = assets
-
-
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
 #source.exclude_patterns = license,images/*/*.jpg
