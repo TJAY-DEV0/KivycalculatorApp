@@ -40,8 +40,19 @@ android.archs = arm64-v8a, armeabi-v7a
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = False
 
-# (int) Android API version
-android.api = 31
+# (int) Target Android API, should be as high as possible.
+android.api = 33
+
+# (int) Minimum API your APK / AAB will support.
+android.minapi = 21
+
+# (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
+android.ndk_api = 33
+
+# (str) Android NDK version to use
+# The build will automatically find a compatible NDK, no need to specify it.
+# You can remove the android.ndk and android.build_tools_version lines
+# if they are present.
 
 # (int) Android build tools version
 android.build_tools_version = 30.0.3
