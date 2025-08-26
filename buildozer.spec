@@ -43,7 +43,8 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = openssl,kivy
-requirements = kivy,kivymd,cython
+requirements = kivy,kivymd,cython,numexpr
+
 
 
 
