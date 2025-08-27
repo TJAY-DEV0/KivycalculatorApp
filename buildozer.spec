@@ -91,7 +91,8 @@ log_level = 2
 # (int) Display warning if buildozer is run as root (0 = False, 1 = True)
 warn_on_root = 1
 
-# (str) The P4A branch to use
-p4a.branch = master
+# (str) python-for-android URL to use for checkout
+p4a.url = https://github.com/kivy/python-for-android.git
 
-
+# (str) python-for-android branch to use
+p4a.branch = develop
