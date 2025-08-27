@@ -2,33 +2,32 @@ name: Android Build
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Install dependencies
-        run: pip install buildozer cython
-        
-      - name: Build and deploy
-        run: buildozer android debug
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core zlib1g-dev libncurses5-dev libgdbm-dev libssl-dev libffi-dev libsqlite3-dev libbz2-dev liblzma-dev build-essential
+          pip install --upgrade pip buildozer virtualenv
+      
+      - name: Patch jnius recipe
+        run: |
+          sed -i 's/isinstance(arg, long)/isinstance(arg, int)/g' ~/.buildozer/android/platform/python-for-android/pythonforandroid/recipes/jnius/jnius_utils.pxi
 
-      - name: Upload APK as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: bin/*.apk
+      - name: Build with Buildozer
+        run: |
+          buildozer android debug
