@@ -92,4 +92,6 @@ log_level = 2
 warn_on_root = 1
 
 # (str) The P4A branch to use
-p4a.branch = develop
+p4a.branch = master
+
+
