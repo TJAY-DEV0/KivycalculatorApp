@@ -4,30 +4,45 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and Java 17
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          
-      - name: Install dependencies
+
+      - name: Install Buildozer and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git-core zlib1g-dev libncurses5-dev libgdbm-dev libssl-dev libffi-dev libsqlite3-dev libbz2-dev liblzma-dev build-essential
-          pip install --upgrade pip buildozer virtualenv
-      
-      - name: Patch jnius recipe
-        run: |
-          sed -i 's/isinstance(arg, long)/isinstance(arg, int)/g' ~/.buildozer/android/platform/python-for-android/pythonforandroid/recipes/jnius/jnius_utils.pxi
+          sudo apt-get install -y git openjdk-17-jdk zlib1g-dev unzip
+          pip install --upgrade pip
+          pip install buildozer cython
 
-      - name: Build with Buildozer
+      - name: Fix p4a branch and settings
         run: |
-          buildozer android debug
+          sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
+          sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
+          sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
+          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+          sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
+
+      - name: Build the APK
+        run: |
+          # Set JAVA_HOME explicitly
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          # Run buildozer with increased verbosity to see the Gradle error
+          buildozer -v android debug
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-app-apk
+          path: bin/*.apk
