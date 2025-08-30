@@ -39,6 +39,9 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           export JAVA_HOME=$JAVA_HOME_17_X64
           # Run buildozer with increased verbosity to see the Gradle error
+
+          buildozer appclean
+
           buildozer -v android debug
       
       - name: Upload Artifact
