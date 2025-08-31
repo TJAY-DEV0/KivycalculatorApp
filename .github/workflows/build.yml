@@ -33,14 +33,15 @@ jobs:
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
           sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
 
+      - name: Clean Buildozer Cache
+  run: buildozer appclean
+
       - name: Build the APK
         run: |
           # Set JAVA_HOME explicitly
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           export JAVA_HOME=$JAVA_HOME_17_X64
           # Run buildozer with increased verbosity to see the Gradle error
-
-          buildozer appclean
 
           buildozer -v android debug
       
