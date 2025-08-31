@@ -37,15 +37,20 @@ jobs:
       - name: Clean Buildozer Cache
         run: buildozer appclean
 
-      - name: Build the APK
+      - name: Build the APK and Capture Logs
         run: |
           # Set JAVA_HOME explicitly
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           export JAVA_HOME=$JAVA_HOME_17_X64
-          # Run buildozer with increased verbosity to see the Gradle error
-
-          buildozer -v android debug
+          # Run buildozer with increased verbosity and save logcat to a file
+          buildozer -v android debug deploy run logcat > app_crash.log 2>&1
       
+      - name: Upload Logs as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-crash-log
+          path: app_crash.log
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
