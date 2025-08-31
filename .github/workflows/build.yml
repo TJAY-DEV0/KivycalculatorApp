@@ -51,4 +51,3 @@ jobs:
         with:
           name: my-app-apk
           path: bin/*.apk
-I think it's same as your recommendations
