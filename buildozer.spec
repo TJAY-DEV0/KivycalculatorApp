@@ -122,7 +122,7 @@ android.permissions = android.permission.READ_EXTERNAL_STORAGE, android.permissi
 #android.ndk = 23b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-#android.ndk_api = 21
+android.ndk_api = 24
 
 android.build_tools_version = 30.0.3
 
