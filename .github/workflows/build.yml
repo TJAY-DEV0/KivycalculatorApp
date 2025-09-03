@@ -20,48 +20,49 @@ jobs:
       
       - name: Install Buildozer and Dependencies
         run: |
-          # The `apt-get` command installs system dependencies needed by buildozer and p4a.
+          # Install core dependencies for Buildozer and p4a
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
-          # The `pip` commands install python build tools.
+          # Install Python packages
           pip install --upgrade pip --no-cache-dir
           pip install buildozer[github] cython --no-cache-dir
       
       - name: Configure buildozer.spec
         run: |
-          # Patch p4a to the 'develop' branch for stability with recent buildozer versions
+          # Use sed to configure p4a branch, API levels, and build tools version for stability
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
-          # Target a modern, stable Android API
           sed -i 's/#android.api = 33/android.api = 33/g' buildozer.spec
-          # Set the build tools version explicitly to a stable, non-rc version
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          # Ensure license acceptance is enabled in the spec file
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
       - name: Delete old buildozer cache
         run: rm -rf ./.buildozer
       
-      - name: Manual Android SDK and NDK Setup
+      - name: Manual Android SDK Setup
+        id: android_setup
         run: |
           # Create SDK and NDK directories
           mkdir -p .buildozer/android/platform/android-sdk
           mkdir -p .buildozer/android/platform/android-ndk
           
-          # Use buildozer to download the correct versions
-          # `|| true` ensures the workflow continues even if this step fails due to license prompts
-          buildozer -v android update --no-build-deps --no-target-deps || true
+          # Download Android command-line tools directly from Google
+          cd .buildozer/android/platform/android-sdk
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
+          rm commandlinetools-linux-9477386_latest.zip
           
-          # Accept licenses explicitly using sdkmanager
-          # This is the most reliable way to ensure licenses are accepted in a non-interactive environment.
-          yes | .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          # Accept licenses and install specific components
+          yes | cmdline-tools/bin/sdkmanager --licenses || true
+          cmdline-tools/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-33"
           
-          # Install specific build tools and platforms using sdkmanager
-          # This ensures the exact versions needed, including `Aidl`, are installed.
-          .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-33"
-      
+          # Set the SDK path for Buildozer
+          echo "android.sdk_path = $(pwd)" >> ../../../../buildozer.spec
+          echo "android.ndk_path = $(pwd)/../android-ndk" >> ../../../../buildozer.spec
+
       - name: Build the APK
-        run: buildozer -v android debug
+        run: |
+          buildozer -v android debug
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
