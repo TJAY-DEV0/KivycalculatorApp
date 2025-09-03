@@ -20,16 +20,13 @@ jobs:
       
       - name: Install Buildozer and Dependencies
         run: |
-          # Install core dependencies for Buildozer and p4a
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
-          # Install Python packages
           pip install --upgrade pip --no-cache-dir
           pip install buildozer[github] cython --no-cache-dir
       
       - name: Configure buildozer.spec
         run: |
-          # Use sed to configure p4a branch, API levels, and build tools version for stability
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
           sed -i 's/#android.api = 33/android.api = 33/g' buildozer.spec
@@ -46,23 +43,26 @@ jobs:
           mkdir -p .buildozer/android/platform/android-sdk
           mkdir -p .buildozer/android/platform/android-ndk
           
-          # Download Android command-line tools directly from Google
+          # Download Android command-line tools directly
           cd .buildozer/android/platform/android-sdk
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
           
-          # Accept licenses and install specific components
+          # Accept licenses explicitly using sdkmanager (corrected path)
           yes | cmdline-tools/bin/sdkmanager --licenses || true
-          cmdline-tools/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-33"
           
-          # Set the SDK path for Buildozer
-          echo "android.sdk_path = $(pwd)" >> ../../../../buildozer.spec
-          echo "android.ndk_path = $(pwd)/../android-ndk" >> ../../../../buildozer.spec
+          # Install specific build tools and platforms (corrected path)
+          cmdline-tools/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-33"
+
+          # Add SDK and NDK paths directly to the buildozer.spec
+          SDK_PATH="$(pwd)"
+          NDK_PATH="$(pwd)/../android-ndk"
+          echo "android.sdk_path = ${SDK_PATH}" >> ../../../../buildozer.spec
+          echo "android.ndk_path = ${NDK_PATH}" >> ../../../../buildozer.spec
 
       - name: Build the APK
-        run: |
-          buildozer -v android debug
+        run: buildozer -v android debug
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
