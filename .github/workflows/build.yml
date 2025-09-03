@@ -8,64 +8,43 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and Java 17
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
+          sudo apt-get install -y git openjdk-17-jdk zlib1g-dev unzip
           pip install --upgrade pip --no-cache-dir
-          pip install buildozer[github] cython --no-cache-dir
-      
-      - name: Configure buildozer.spec
+          pip install buildozer cython --no-cache-dir
+
+
+      - name: Fix p4a branch and settings
         run: |
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
-          sed -i 's/#android.api = 33/android.api = 33/g' buildozer.spec
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+          sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
 
-      - name: Delete old buildozer cache
-        run: rm -rf ./.buildozer
-      
-      - name: Manual Android SDK Setup
-        id: android_setup
-        run: |
-          mkdir -p .buildozer/android/platform/android-sdk
-          mkdir -p .buildozer/android/platform/android-ndk
-          
-          # Download Android command-line tools
-          cd .buildozer/android/platform/android-sdk
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip commandlinetools-linux-9477386_latest.zip
-          rm commandlinetools-linux-9477386_latest.zip
-          
-          # Create the 'latest' directory and move tools into it
-          mkdir latest
-          mv cmdline-tools/* latest/
-          
-          # Accept licenses explicitly using sdkmanager (corrected path)
-          yes | cmdline-tools/latest/bin/sdkmanager --licenses || true
-          
-          # Install specific build tools and platforms (corrected path)
-          cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-33"
-
-          # Add SDK and NDK paths to buildozer.spec
-          SDK_PATH="$(pwd)"
-          NDK_PATH="$(pwd)/../android-ndk"
-          echo "android.sdk_path = ${SDK_PATH}" >> ../../../../buildozer.spec
-          echo "android.ndk_path = ${NDK_PATH}" >> ../../../../buildozer.spec
+      - name: Clean Buildozer Cache
+        run: buildozer appclean
 
       - name: Build the APK
-        run: buildozer -v android debug
+        run: |
+          # Set JAVA_HOME explicitly
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          # Run buildozer with increased verbosity to see the Gradle error
+
+          buildozer -v android debug
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
