@@ -25,28 +25,27 @@ jobs:
           pip install --upgrade pip --no-cache-dir
           pip install buildozer[github] cython --no-cache-dir
 
-      - name: Configure buildozer.spec for stability
+      - name: Configure buildozer.spec
         run: |
-          # Patch p4a to the 'develop' branch for stability with recent buildozer versions
+          # Patch p4a to the 'develop' branch for compatibility
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
-          # Target a modern, stable Android API
+          # Set a stable Android API and build tools version
           sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
-          # Set the build tools version explicitly to a stable, non-rc version
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          # Ensure license acceptance is enabled in the spec file
+          # Ensure automatic license acceptance is enabled
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
-      - name: Accept Android SDK Licenses
+      - name: Delete old buildozer cache
         run: |
-          # The SDK manager is installed with buildozer.
-          # Use yes | to automatically input 'y' for license acceptance.
-          # This step must be run before the buildozer command.
-          ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          # Deleting the cache ensures that a fresh download of the SDK is performed.
+          rm -rf ./.buildozer
 
-      - name: Build the APK
+      - name: Accept Android SDK Licenses and build
         run: |
-          # Buildozer will now use the accepted licenses and the specified build tools version.
+          # Use the buildozer command to trigger the initial SDK download and license acceptance.
+          # The `sdkmanager` command will be executed internally by buildozer.
+          # Building a dummy project or just running the command is enough to trigger the downloads.
           buildozer -v android debug
       
       - name: Upload Artifact
