@@ -13,30 +13,40 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python and Java 17
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
+      
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
           pip install --upgrade pip --no-cache-dir
           pip install buildozer[github] cython --no-cache-dir
-          # Fix for outdated buildozer behavior with develop branch
+
+      - name: Configure buildozer.spec for stability
+        run: |
+          # Patch p4a to the 'develop' branch for stability with recent buildozer versions
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
+          # Target a modern, stable Android API
           sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
-          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+          # Set the build tools version explicitly to a stable, non-rc version
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
+          # Ensure license acceptance is enabled in the spec file
+          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
-      # The 'buildozer appclean' step is removed to avoid the FileNotFoundError.
-      # The 'android debug' command will handle the initial setup automatically.
+      - name: Accept Android SDK Licenses
+        run: |
+          # The SDK manager is installed with buildozer.
+          # Use yes | to automatically input 'y' for license acceptance.
+          # This step must be run before the buildozer command.
+          ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Build the APK
         run: |
-          # Buildozer will download python-for-android and other SDK components as needed.
+          # Buildozer will now use the accepted licenses and the specified build tools version.
           buildozer -v android debug
       
       - name: Upload Artifact
