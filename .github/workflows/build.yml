@@ -8,42 +8,45 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest  # Use ubuntu-latest for latest fixes and toolchain
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Use the latest version of the action
 
-      - name: Set up Python and Java 17
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git openjdk-17-jdk zlib1g-dev unzip
+          sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
           pip install --upgrade pip --no-cache-dir
-          pip install buildozer cython --no-cache-dir
+          pip install buildozer[github] cython --no-cache-dir
 
-
-      - name: Fix p4a branch and settings
+      - name: Patch Buildozer for compatibility
         run: |
+          # Patch p4a to a stable branch compatible with Buildozer and modern Android
+          # This patch is crucial for preventing common build failures.
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
-          sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
           sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
+          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
+      - name: Set Android Build Tools Version
+        run: |
+          # The Gradle version in p4a often requires a higher Android Build Tools version.
+          # For API 33, 34.0.0 is a common stable version.
+          sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
+      
       - name: Clean Buildozer Cache
-        run: buildozer appclean
-
+        run: buildozer android clean
+      
       - name: Build the APK
         run: |
-          # Set JAVA_HOME explicitly
-          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
-          export JAVA_HOME=$JAVA_HOME_17_X64
-          # Run buildozer with increased verbosity to see the Gradle error
-
+          # JAVA_HOME is now set automatically by the 'setup-java' action if needed, 
+          # but buildozer often handles it correctly now.
           buildozer -v android debug
       
       - name: Upload Artifact
