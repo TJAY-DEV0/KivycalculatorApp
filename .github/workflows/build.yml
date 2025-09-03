@@ -8,10 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Use ubuntu-latest for latest fixes and toolchain
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4  # Use the latest version of the action
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,29 +24,19 @@ jobs:
           sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
           pip install --upgrade pip --no-cache-dir
           pip install buildozer[github] cython --no-cache-dir
-
-      - name: Patch Buildozer for compatibility
-        run: |
-          # Patch p4a to a stable branch compatible with Buildozer and modern Android
-          # This patch is crucial for preventing common build failures.
+          # Fix for outdated buildozer behavior with develop branch
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
           sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-
-      - name: Set Android Build Tools Version
-        run: |
-          # The Gradle version in p4a often requires a higher Android Build Tools version.
-          # For API 33, 34.0.0 is a common stable version.
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-      
-      - name: Clean Buildozer Cache
-        run: buildozer android clean
-      
+
+      # The 'buildozer appclean' step is removed to avoid the FileNotFoundError.
+      # The 'android debug' command will handle the initial setup automatically.
+
       - name: Build the APK
         run: |
-          # JAVA_HOME is now set automatically by the 'setup-java' action if needed, 
-          # but buildozer often handles it correctly now.
+          # Buildozer will download python-for-android and other SDK components as needed.
           buildozer -v android debug
       
       - name: Upload Artifact
