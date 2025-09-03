@@ -8,44 +8,37 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python and Java 17
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
-          pip install --upgrade pip --no-cache-dir
-          pip install buildozer[github] cython --no-cache-dir
+          sudo apt-get install -y git openjdk-17-jdk zlib1g-dev unzip
+          pip install --upgrade pip
+          pip install buildozer cython
 
-      - name: Configure buildozer.spec
+      - name: Fix p4a branch and settings
         run: |
-          # Patch p4a to the 'develop' branch for compatibility
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
           sed -i 's/p4a.branch = main/p4a.branch = develop/g' buildozer.spec
-          # Set a stable Android API and build tools version
-          sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          # Ensure automatic license acceptance is enabled
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+          sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
 
-      - name: Delete old buildozer cache
+      - name: Build the APK
         run: |
-          # Deleting the cache ensures that a fresh download of the SDK is performed.
-          rm -rf ./.buildozer
-
-      - name: Accept Android SDK Licenses and build
-        run: |
-          # Use the buildozer command to trigger the initial SDK download and license acceptance.
-          # The `sdkmanager` command will be executed internally by buildozer.
-          # Building a dummy project or just running the command is enough to trigger the downloads.
+          # Set JAVA_HOME explicitly
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          # Run buildozer with increased verbosity to see the Gradle error
           buildozer -v android debug
       
       - name: Upload Artifact
