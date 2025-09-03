@@ -20,8 +20,10 @@ jobs:
       
       - name: Install Buildozer and Dependencies
         run: |
+          # The `apt-get` command installs system dependencies needed by buildozer and p4a.
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev unzip
+          # The `pip` commands install python build tools.
           pip install --upgrade pip --no-cache-dir
           pip install buildozer[github] cython --no-cache-dir
       
@@ -47,12 +49,15 @@ jobs:
           mkdir -p .buildozer/android/platform/android-ndk
           
           # Use buildozer to download the correct versions
+          # `|| true` ensures the workflow continues even if this step fails due to license prompts
           buildozer -v android update --no-build-deps --no-target-deps || true
           
           # Accept licenses explicitly using sdkmanager
+          # This is the most reliable way to ensure licenses are accepted in a non-interactive environment.
           yes | .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
           
-          # Install specific build tools and platforms
+          # Install specific build tools and platforms using sdkmanager
+          # This ensures the exact versions needed, including `Aidl`, are installed.
           .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-33"
       
       - name: Build the APK
@@ -63,12 +68,3 @@ jobs:
         with:
           name: my-app-apk
           path: bin/*.apk
-
-### Why this approach works
-
-*   **Explicit Control:** Instead of Buildozer handling everything automatically, this workflow manually manages the crucial and most failure-prone parts of the build process: the SDK setup and licensing.
-*   **Forced Licensing:** The `yes | .../sdkmanager --licenses` command runs license acceptance in a non-interactive way, which is essential for CI environments. Adding `|| true` prevents workflow failure if `sdkmanager` exits with an error code, which can happen even after licenses are successfully accepted.
-*   **Specific SDK Component Installation:** After accepting the licenses, the workflow uses `sdkmanager` to install the exact SDK components needed for the build, avoiding potential issues caused by using the latest unstable release candidate.
-*   **Clean Cache:** Removing the `.buildozer` cache at the start of the build ensures a fresh, non-corrupted environment for each build.
-
-#This workflow is more complex but more resistant to the common problems of automated Buildozer builds on CI platforms.
