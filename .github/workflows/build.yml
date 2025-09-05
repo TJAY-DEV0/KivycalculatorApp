@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: 'kivy/buildozer:latest'
+      image: 'python3-android/buildozer:latest'
       options: --user root
 
     steps:
