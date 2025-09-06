@@ -19,7 +19,7 @@ from kivy.uix.accordion import Accordion,AccordionItem
 from kivy.resources import resource_find
 from kivy.core.window import Window
 from functools import partial
-import numexpr
+import AST
 import math
 import re
 import os
