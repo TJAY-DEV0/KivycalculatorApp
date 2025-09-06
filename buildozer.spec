@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = My Application
+title = Calculator 
 
 # (str) Package name
-package.name = myapp
+package.name = CalculatorApp
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
@@ -12,9 +12,6 @@ package.domain = org.test
 
 # (str) Source code where the main.py live
 source.dir = .
-
-# (str) Main entry point of the application.
-main.py = myfirstpage.py
 
 
 # (list) Source files to include (let empty to include all the files)
@@ -42,7 +39,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,cython
+requirements = python3,kivy,cython,numpy
 
 
 # (str) Custom source folders for requirements
