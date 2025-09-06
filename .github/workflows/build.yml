@@ -25,12 +25,6 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Set up Android SDK paths
-        run: |
-          echo "PATH=$PATH:/home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
-          echo "PATH=$PATH:/home/runner/.buildozer/android/platform/android-sdk/emulator" >> $GITHUB_ENV
-          echo "PATH=$PATH:/home/runner/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_ENV
-
       - name: Fix p4a branch and settings
         run: |
           sed -i 's/#p4a.branch = master/p4a.branch = develop/g' buildozer.spec
@@ -39,25 +33,16 @@ jobs:
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
           sed -i 's/#android.api = 31/android.api = 33/g' buildozer.spec
 
-      - name: Clean Buildozer Cache
-        run: buildozer appclean
-
       - name: Build the APK
         run: |
           # Set JAVA_HOME explicitly
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           export JAVA_HOME=$JAVA_HOME_17_X64
           # Run buildozer with increased verbosity to see the Gradle error
-          buildozer -v android debug deploy run logcat > app_crash.log 2>&1
+          buildozer -v android debug
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: my-app-apk
           path: bin/*.apk
-
-      - name: Upload Logs as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-crash-log
-          path: app_crash.log
