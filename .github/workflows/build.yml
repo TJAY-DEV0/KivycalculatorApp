@@ -39,7 +39,7 @@ jobs:
     - name: Build Android AAB using Docker
       # This step uses a pre-built Docker image with all dependencies
       # to ensure a consistent and reliable build environment.
-      uses: docker://kivy/buildozer:stable
+      uses: docker://kivy/buildozer:android-ndk-r25b
       with:
         args: buildozer android release
 
