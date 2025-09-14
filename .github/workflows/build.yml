@@ -1,3 +1,4 @@
+
 name: Build Android Release
 
 on:
@@ -9,6 +10,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Set permissions for GITHUB_TOKEN
+    permissions:
+      contents: write # Allows writing to the repository to create a release.
 
     steps:
     - name: Checkout code
@@ -22,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         # Install buildozer and other required tools
-        pip install buildozer
+        pip install buildozer cython
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
         sudo apt-get install -y libgstreamer1.0-dev
@@ -31,21 +36,30 @@ jobs:
       run: |
         # Use sed to inject secret values into buildozer.spec
         # This prevents passwords and aliases from being in the public repository
-        sed -i "s|#android.release_keystore =|android.release_keystore = myapp.jks|" buildozer.spec
+        sed -i "s|#android.release_keystore =|android.release_keystore = .buildozer/myapp.jks|" buildozer.spec
         sed -i "s|#android.release_keystore_password =|android.release_keystore_password = ${{ secrets.KEYSTORE_PASSWORD }}|" buildozer.spec
         sed -i "s|#android.release_keyalias =|android.release_keyalias = ${{ secrets.KEY_ALIAS }}|" buildozer.spec
         sed -i "s|#android.release_keyalias_password =|android.release_keyalias_password = ${{ secrets.KEY_PASSWORD }}|" buildozer.spec
-
+        
     - name: Create keystore file from secret
       env:
         ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        # Decode the base64 secret and write it to a .jks file
-        echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
+        # Decode the base64 secret and write it to a .jks file inside the buildozer directory
+        mkdir -p .buildozer
+        echo "$ENCODED_KEYSTORE" | base64 --decode > .buildozer/myapp.jks
         
+    - name: Cache Buildozer and Gradle
+      uses: actions/cache@v3
+      with:
+        path: |
+          .buildozer
+          .gradle
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+
     - name: Build Android AAB
       run: buildozer android release
-      
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
