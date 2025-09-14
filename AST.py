@@ -1,8 +1,9 @@
 import ast
 import operator
 import re
+import math
 
-# Map safe operators and functions to their standard library implementations
+# Map safe binary operators
 safe_operators = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -11,18 +12,31 @@ safe_operators = {
     ast.Pow: operator.pow,
 }
 
-# Map unary operators
+# Map safe unary operators
 safe_unary_operators = {
     ast.USub: operator.neg,
     ast.UAdd: operator.pos,
 }
 
+# Map safe function calls and constants
+safe_functions = {
+    'sin': math.sin,
+    'cos': math.cos,
+    'tan': math.tan,
+    'log': math.log,
+    'log10': math.log10,
+    'sqrt': math.sqrt,
+    'radians': math.radians,
+    'degrees': math.degrees,
+    'asin': math.asin,
+    'acos': math.acos,
+    'atan': math.atan,
+    'pi': math.pi, 
+}
+
 def safe_eval(expr):
-    """Safely evaluate a mathematical expression string, handling leading zeros."""
+    """Safely evaluate a mathematical expression string."""
     
-    # Pre-process the expression for specific syntax that ast.parse might reject.
-    # This is still fragile, but better than nothing.
-    # For robust parsing, a dedicated math parser library is best.
     cleaned_expr = re.sub(r'(\+\s*)+', '+', expr)
     cleaned_expr = re.sub(r'(\-\s*)+', '-', cleaned_expr)
     
@@ -49,6 +63,20 @@ def safe_eval(expr):
                     return op(_evaluate(n.operand))
                 else:
                     raise TypeError("Unsupported unary operator")
+            elif isinstance(n, ast.Call):
+                func_name = n.func.id if isinstance(n.func, ast.Name) else None
+                args = [_evaluate(arg) for arg in n.args]
+                
+                if func_name in safe_functions and callable(safe_functions[func_name]):
+                    return safe_functions[func_name](*args)
+                else:
+                    raise TypeError("Unsupported function call")
+            elif isinstance(n, ast.Name):
+                # Handles constants like 'pi'
+                if n.id in safe_functions:
+                    return safe_functions[n.id]
+                else:
+                    raise TypeError("Unsupported variable")
             else:
                 raise TypeError(f"Unsupported expression type: {type(n)}")
 
