@@ -37,12 +37,9 @@ jobs:
         echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
         
     - name: Build Android AAB using Docker
-      # This step uses a pre-built Docker image with all dependencies
-      # to ensure a consistent and reliable build environment.
-      uses: docker://kivy/buildozer:android-ndk-r25b
-      with:
-        args: buildozer android release
-
+  uses: docker://kivy/buildozer:latest
+  with:
+    args: buildozer android release
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
