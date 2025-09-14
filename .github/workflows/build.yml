@@ -1,5 +1,5 @@
 # This workflow uses GitHub Actions to build an Android AAB file
-# using Buildozer for Python/Kivy projects.
+# using Buildozer for Python/Kivy projects inside a Docker container.
 
 name: Build Android Release
 
@@ -13,33 +13,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Set permissions for GITHUB_TOKEN
     permissions:
-      contents: write # Allows writing to the repository to create a release.
+      contents: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-
-    - name: Install dependencies
-      run: |
-        # Install buildozer and other required tools
-        pip install buildozer cython
-        sudo apt-get update
-        sudo apt-get install -y build-essential autoconf libtool automake m4 patch libffi-dev
-        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-        sudo apt-get install -y libgstreamer1.0-dev
-
-    - name: Install latest python-for-android
-      run: |
-        pip uninstall -y python-for-android
-        pip install git+https://github.com/kivy/python-for-android.git
-        
     - name: Configure buildozer.spec for signing
       run: |
         # Use sed to inject secret values into buildozer.spec
@@ -56,9 +36,13 @@ jobs:
         # Decode the base64 secret and write it to a .jks file
         echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
         
-    - name: Build Android AAB
-      run: buildozer android release
-      
+    - name: Build Android AAB using Docker
+      # This step uses a pre-built Docker image with all dependencies
+      # to ensure a consistent and reliable build environment.
+      uses: docker://kivy/buildozer:stable
+      with:
+        args: buildozer android release
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
