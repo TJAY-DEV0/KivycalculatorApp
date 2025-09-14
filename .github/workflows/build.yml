@@ -51,9 +51,6 @@ jobs:
         # Decode the base64 secret and write it to a .jks file
         echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
         
-    - name: Clean previous builds
-      run: buildozer android clean
-        
     - name: Build Android AAB
       run: buildozer android release
       
