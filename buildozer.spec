@@ -315,6 +315,20 @@ android.allow_backup = True
 # (str) The format used to package the app for debug mode (apk or aar).
 # android.debug_artifact = apk
 
+# (Optional) Keystore
+# Keystore used to sign the APK or AAB.
+# If no keystore is specified, a debug keystore will be used.
+#android.release_keystore = myapp.jks
+
+# Password of the keystore
+#android.release_keystore_password = your_password
+
+# Alias of the key
+#android.release_keyalias = myalias
+
+# Password of the key
+#android.release_keyalias_password = your_password
+
 #
 # Python for android (p4a) specific
 #
