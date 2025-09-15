@@ -11,38 +11,38 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+  contents: write
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+steps:
+- name: Checkout code
+  uses: actions/checkout@v2
 
-    - name: Disable Docker BuildKit
-      run: echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
+- name: Disable Docker BuildKit
+  run: echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
 
-    - name: Configure buildozer.spec for signing
-      run: |
-        # Use sed to inject secret values into buildozer.spec
-        sed -i "s|#android.release_keystore =|android.release_keystore = myapp.jks|" buildozer.spec
-        sed -i "s|#android.release_keystore_password =|android.release_keystore_password = ${{ secrets.KEYSTORE_PASSWORD }}|" buildozer.spec
-        sed -i "s|#android.release_keyalias =|android.release_keyalias = ${{ secrets.KEY_ALIAS }}|" buildozer.spec
-        sed -i "s|#android.release_keyalias_password =|android.release_keyalias_password = ${{ secrets.KEY_PASSWORD }}|" buildozer.spec
+- name: Configure buildozer.spec for signing
+  run: |
+    # Use sed to inject secret values into buildozer.spec
+    sed -i "s|#android.release_keystore =|android.release_keystore = myapp.jks|" buildozer.spec
+    sed -i "s|#android.release_keystore_password =|android.release_keystore_password = ${{ secrets.KEYSTORE_PASSWORD }}|" buildozer.spec
+    sed -i "s|#android.release_keyalias =|android.release_keyalias = ${{ secrets.KEY_ALIAS }}|" buildozer.spec
+    sed -i "s|#android.release_keyalias_password =|android.release_keyalias_password = ${{ secrets.KEY_PASSWORD }}|" buildozer.spec
 
-    - name: Create keystore file from secret
-      env:
-        ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
-      run: |
-        echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
+- name: Create keystore file from secret
+  env:
+    ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
+  run: |
+    echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
 
-    - name: Pull Buildozer Docker image (stable tag)
-      run: docker pull kivy/buildozer:stable
+- name: Pull Buildozer Docker image (latest tag)
+  run: docker pull kivy/buildozer:latest
 
-    - name: Build Android AAB using Docker
-      run: |
-        docker run --rm -v ${{ github.workspace }}:/home/user/app kivy/buildozer:stable buildozer android release
+- name: Build Android AAB using Docker
+  run: |
+    docker run --rm -v ${{ github.workspace }}:/home/user/app kivy/buildozer:latest buildozer android release
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: android-app-bundle
-        path: bin/*.aab
+- name: Upload artifact
+  uses: actions/upload-artifact@v4
+  with:
+    name: android-app-bundle
+    path: bin/*.aab
