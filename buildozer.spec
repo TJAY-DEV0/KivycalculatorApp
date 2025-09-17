@@ -324,7 +324,7 @@ android.release_keystore = myapp.jks
 
 
 android.release_keystore_password = %(android_release_keystore_password)s
-android.release_keyalias = alias
+android.release_keyalias = myalias
 android.release_keyalias_password = %(android_release_keyalias_password)s
 
 
