@@ -322,10 +322,10 @@ android.release = True
 #android.release_keystore = myapp.jks
 
 # Password of the keystore
-#android.release_keystore_password = your_password
+android.release_keystore_password = 8388756517
 
 # Alias of the key
-#android.release_keyalias = myalias
+android.release_keyalias = alias
 
 # Password of the key
 #android.release_keyalias_password = your_password
