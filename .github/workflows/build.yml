@@ -1,48 +1,47 @@
-name: Build Android Release
+name: Build Android App
 
 on:
   push:
     branches:
       - main
-      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    permissions:
-        contents: write
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Disable Docker BuildKit
-      run: echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-    - name: Configure buildozer.spec for signing
-      run: |
-    # Use sed to inject secret values into buildozer.spec
-        sed -i "s|#android.release_keystore =|android.release_keystore = myapp.jks|" buildozer.spec
-        sed -i "s|#android.release_keystore_password =|android.release_keystore_password = ${{ secrets.KEYSTORE_PASSWORD }}|" buildozer.spec
-        sed -i "s|#android.release_keyalias =|android.release_keyalias = ${{ secrets.KEY_ALIAS }}|" buildozer.spec
-        sed -i "s|#android.release_keyalias_password =|android.release_keyalias_password = ${{ secrets.KEY_PASSWORD }}|" buildozer.spec
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Create keystore file from secret
-      env:
-    ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
-      run: |
-    echo "$ENCODED_KEYSTORE" | base64 --decode > myapp.jks
+      - name: Install Buildozer dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev liblzma-dev libffi-dev libssl-dev
+          pip3 install --upgrade buildozer
 
-    - name: Pull Buildozer Docker image (latest tag)
-      run: docker pull kivy/buildozer:latest
-
-    - name: Build Android AAB using Docker
-      run: |
-        docker run --rm -v ${{ github.workspace }}:/home/user/app kivy/buildozer:latest buildozer android release
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: android-app-bundle
-        path: bin/*.aab
+      - name: Create keystore file from secret
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks
+        
+      - name: Build the Android App Bundle (AAB)
+        env:
+          android_release_keystore_password: ${{ secrets.KEYSTORE_PASSWORD }}
+          android_release_keyalias_password: ${{ secrets.KEYALIAS_PASSWORD }}
+        run: |
+          buildozer android release
+      
+      - name: Upload aab artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: bin/*.aab
