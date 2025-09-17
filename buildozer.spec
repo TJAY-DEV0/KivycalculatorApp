@@ -321,14 +321,16 @@ android.release = True
 # If no keystore is specified, a debug keystore will be used.
 android.release_keystore = myapp.jks
 
-# Password of the keystore
-android.release_keystore_password = 8388756517
 
-# Alias of the key
+
+android.release_keystore_password = %(android_release_keystore_password)s
 android.release_keyalias = alias
+android.release_keyalias_password = %(android_release_keyalias_password)s
 
-# Password of the key
-android.release_keyalias_password = 8388756517
+
+[buildozer:env]
+android_release_keystore_password = 
+android_release_keyalias_password = 
 
 #
 # Python for android (p4a) specific
