@@ -326,10 +326,6 @@ android.release_keyalias = alias
 android.release_keyalias_password = %(android_release_keyalias_password)s
 # ...
 
-[buildozer:env]
-android_release_keystore_password =
-android_release_keyalias_password =
-
 
 #
 # Python for android (p4a) specific
@@ -471,3 +467,7 @@ warn_on_root = 1
 #    Then, invoke the command line with the "demo" profile:
 #
 #buildozer --profile demo android debug
+
+[buildozer:env]
+android_release_keystore_password =
+android_release_keyalias_password =
