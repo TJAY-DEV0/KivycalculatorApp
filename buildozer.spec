@@ -319,12 +319,16 @@ android.allow_backup = True
 # Keystore used to sign the APK or AAB.
 # If no keystore is specified, a debug keystore will be used.
 
+# (Optional) Keystore
+# Keystore used to sign the APK or AAB.
+# If no keystore is specified, a debug keystore will be used.
+
 android.release = True
 android.release_keystore = myapp.jks
 android.release_keystore_password = %(android_release_keystore_password)s
 android.release_keyalias = alias
 android.release_keyalias_password = %(android_release_keyalias_password)s
-# ...
+
 
 
 #
@@ -467,7 +471,3 @@ warn_on_root = 1
 #    Then, invoke the command line with the "demo" profile:
 #
 #buildozer --profile demo android debug
-
-[buildozer:env]
-android_release_keystore_password = None
-android_release_keyalias_password = None
