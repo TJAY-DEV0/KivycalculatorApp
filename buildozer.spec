@@ -309,7 +309,6 @@ android.allow_backup = True
 # (bool) Skip byte compile for .py files
 # android.no-byte-compile-python = False
 
-android.release = True
 # (str) The format used to package the app for release mode (aab or apk or aar).
 # android.release_artifact = aab
 
@@ -319,18 +318,18 @@ android.release = True
 # (Optional) Keystore
 # Keystore used to sign the APK or AAB.
 # If no keystore is specified, a debug keystore will be used.
+
+android.release = True
 android.release_keystore = myapp.jks
-
-
-
 android.release_keystore_password = %(android_release_keystore_password)s
-android.release_keyalias = myalias
+android.release_keyalias = alias
 android.release_keyalias_password = %(android_release_keyalias_password)s
-
+# ...
 
 [buildozer:env]
-android_release_keystore_password = 
-android_release_keyalias_password = 
+android_release_keystore_password =
+android_release_keyalias_password =
+
 
 #
 # Python for android (p4a) specific
