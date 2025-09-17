@@ -39,11 +39,12 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks
         
       - name: Build the Android App Bundle (AAB)
-        env:
-          android_release_keystore_password: ${{ secrets.KEYSTORE_PASSWORD }}
-          android_release_keyalias_password: ${{ secrets.KEYALIAS_PASSWORD }}
         run: |
-          buildozer android release
+          buildozer android release \
+            --android-keystore myapp.jks \
+            --android-storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            --android-keyalias alias \
+            --android-keypass ${{ secrets.KEYALIAS_PASSWORD }}
       
       - name: Upload aab artifact
         uses: actions/upload-artifact@v4
