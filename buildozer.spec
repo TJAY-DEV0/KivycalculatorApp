@@ -469,5 +469,5 @@ warn_on_root = 1
 #buildozer --profile demo android debug
 
 [buildozer:env]
-android_release_keystore_password =
-android_release_keyalias_password =
+android_release_keystore_password = None
+android_release_keyalias_password = None
