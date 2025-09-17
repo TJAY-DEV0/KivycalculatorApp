@@ -31,8 +31,8 @@ jobs:
       - name: Install Python requirements
         run: |
           pip3 install --upgrade pip
-          pip3 install -r requirements.txt || true # Install dependencies from requirements.txt if it exists
-          pip3 install buildozer cython pyjnius # Explicitly install the core dependencies
+          pip3 install -r requirements.txt || true
+          pip3 install buildozer cython pyjnius
         
       - name: Create keystore file from secret
         run: |
