@@ -23,15 +23,9 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Cache Buildozer
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.buildozer
-            ~/.local/share/buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-          restore-keys: |
-            ${{ runner.os }}-buildozer-
+      # --- This step will force a complete fresh build every time ---
+      - name: Force clean build environment
+        run: rm -rf .buildozer
 
       - name: Install Buildozer dependencies
         run: |
@@ -49,7 +43,7 @@ jobs:
         
       - name: Build the Android App Bundle (AAB)
         run: |
-          buildozer android release --clean \
+          buildozer android release \
             --android-keystore myapp.jks \
             --android-storepass ${{ secrets.KEYSTORE_PASSWORD }} \
             --android-keyalias alias \
