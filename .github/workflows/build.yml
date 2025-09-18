@@ -41,16 +41,15 @@ jobs:
       - name: Install Python requirements
         run: |
           pip3 install --upgrade pip
-          pip3 install -r requirements.txt || true
           pip3 install buildozer cython pyjnius
-        
+          
       - name: Create keystore file from secret
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks
         
       - name: Build the Android App Bundle (AAB)
         run: |
-          buildozer android release \
+          buildozer android release --clean \
             --android-keystore myapp.jks \
             --android-storepass ${{ secrets.KEYSTORE_PASSWORD }} \
             --android-keyalias alias \
