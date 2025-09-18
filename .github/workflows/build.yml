@@ -48,6 +48,9 @@ jobs:
       - name: Create keystore file from secret
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks
+
+      - name: Clean previous build
+        run: buildozer android clean
         
       - name: Build the Android App Bundle (AAB)
         run: |
