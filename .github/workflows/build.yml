@@ -9,8 +9,8 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Build with Buildozer for Android Debug
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+        # Use the fixed version of the action
+        uses: ArtemSBulgakov/buildozer-action@v1.2.0
         with:
-          # Use the new 'command' input
+          # Use the 'command' input instead of 'buildozer-cmd'
           command: "buildozer android debug"
