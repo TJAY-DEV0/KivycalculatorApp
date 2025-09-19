@@ -1,12 +1,8 @@
 name: Build Kivy Android App
-
 on:
-  # Trigger the workflow on pushes to the main branch
   push:
     branches:
       - main
-  # Also trigger on pushes to version tags (e.g., v1.0, v1.2.3)
-  push:
     tags:
       - 'v*.*.*'
 
