@@ -72,14 +72,14 @@ jobs:
       - name: Build with Buildozer
         run: |
           # If the trigger was a version tag, build a signed release AAB
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          if [[ "${{ github.ref }}" == refs/heads/main ]]; then
             echo "Starting release build..."
             buildozer android release
-          # Otherwise, build a debug APK
           else
             echo "Starting debug build..."
             buildozer android debug
           fi
+
         env:
           # These are the environment variables Buildozer will use for signing the release.
           # They are automatically read from GitHub Secrets.
