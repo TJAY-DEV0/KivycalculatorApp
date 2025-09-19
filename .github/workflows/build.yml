@@ -1,16 +1,95 @@
-name: Android CI Buildozer
-on: [push, pull_request]
+name: Build Kivy Android App
+
+on:
+  # Trigger the workflow on pushes to the main branch
+  push:
+    branches:
+      - main
+  # Also trigger on pushes to version tags (e.g., v1.0, v1.2.3)
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  build_debug:
+  build-android:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Build with Buildozer for Android Debug
-        # Use the fixed version of the action
-        uses: ArtemSBulgakov/buildozer-action@v1.2.0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          # Use the 'command' input instead of 'buildozer-cmd'
-          command: "buildozer android debug"
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies
+        # This step installs packages needed by Buildozer and to compile dependencies.
+        # Adding autoconf and libtool should fix the LT_SYS_SYMBOL_USCORE error.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            zip \
+            unzip \
+            build-essential \
+            autoconf \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo5 \
+            liblzma-dev \
+            libffi-dev \
+            libssl-dev
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install buildozer cython==0.29.34 # Pinning cython version for stability
+          # Install requirements from your project file if you have one
+          # pip3 install -r requirements.txt
+
+      - name: Decode Keystore (only for release)
+        # This step runs only if the trigger was a version tag (a release).
+        # It decodes the base64 secret into the myapp.jks file.
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "Decoding keystore for release build..."
+          echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks
+        env:
+          # This ensures the step doesn't fail if the secret is missing on non-release builds.
+          ANDROID_KEYSTORE_FILE: ${{ secrets.ANDROID_KEYSTORE_FILE }}
+
+      - name: Build with Buildozer
+        run: |
+          # If the trigger was a version tag, build a signed release AAB
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "Starting release build..."
+            buildozer android release
+          # Otherwise, build a debug APK
+          else
+            echo "Starting debug build..."
+            buildozer android debug
+          fi
+        env:
+          # These are the environment variables Buildozer will use for signing the release.
+          # They are automatically read from GitHub Secrets.
+          P4A_RELEASE_KEYSTORE: './myapp.jks'
+          P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.KEYSTORE_PASSWORD }}
+          P4A_RELEASE_KEYALIAS: ${{ secrets.KEY_ALIAS }}
+          P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.KEYALIAS_PASSWORD }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: bin/*.aab # or bin/*.apk for debug builds
+
