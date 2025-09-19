@@ -10,6 +10,7 @@ jobs:
       
       - name: Build with Buildozer for Android Debug
         uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          buildozer-cmd: "buildozer android debug"
-          python-version: "3.9"
+          # Use the new 'command' input
+          command: "buildozer android debug"
