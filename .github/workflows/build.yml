@@ -37,6 +37,7 @@ jobs:
             build-essential \
             autoconf \
             libtool \
+            libtool-bin \
             pkg-config \
             zlib1g-dev \
             libncurses5-dev \
@@ -44,6 +45,7 @@ jobs:
             liblzma-dev \
             libffi-dev \
             libssl-dev
+
 
 
       - name: Install Python dependencies
