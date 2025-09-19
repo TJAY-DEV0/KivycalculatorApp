@@ -103,11 +103,14 @@ android.permissions = android.permission.INTERNET, (name=android.permission.WRIT
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
 
-
-android.ndk = 26b
-
 # (int) Target Android API, should be as high as possible.
 android.api = 34
+
+# (str) Android NDK version to use. python-for-android requires 25 or newer.
+android.ndk = 25b
+
+# (int) Android NDK API to use.
+android.ndk_api = 21
 
 # (int) Minimum API your APK / AAB will support.
 android.minapi = 21
