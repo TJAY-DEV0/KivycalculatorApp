@@ -41,10 +41,10 @@ jobs:
             zlib1g-dev \
             libncurses5-dev \
             libncursesw5-dev \
-            libtinfo5 \
             liblzma-dev \
             libffi-dev \
             libssl-dev
+
 
       - name: Install Python dependencies
         run: |
