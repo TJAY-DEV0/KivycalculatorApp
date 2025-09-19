@@ -1,56 +1,15 @@
-name: Build Android App
-
-on:
-  push:
-    branches:
-      - main
+name: Android CI Buildozer
+on: [push, pull_request]
 
 jobs:
-  build:
+  build_debug:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      # --- This step will force a complete fresh build every time ---
-      - name: Force clean build environment
-        run: rm -rf .buildozer
-
-      - name: Install Buildozer dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip zlib1g-dev libncurses5-dev libncursesw5-dev liblzma-dev libffi-dev libssl-dev
-          
-      - name: Install Python requirements
-        run: |
-          pip3 install --upgrade pip
-          pip3 install buildozer cython pyjnius
-          
-      - name: Create keystore file from secret
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks
-        
-      - name: Build the Android App Bundle (AAB)
-        run: |
-          buildozer android release \
-            --android-keystore myapp.jks \
-            --android-storepass ${{ secrets.KEYSTORE_PASSWORD }} \
-            --android-keyalias alias \
-            --android-keypass ${{ secrets.KEYALIAS_PASSWORD }}
       
-      - name: Upload aab artifact
-        uses: actions/upload-artifact@v4
+      - name: Build with Buildozer for Android Debug
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
-          name: app-release
-          path: bin/*.aab
+          buildozer-cmd: "buildozer android debug"
+          python-version: "3.9"
