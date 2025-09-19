@@ -18,8 +18,8 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          buildozer-cmd: "buildozer android release"
-          python-version: "3.9"
+          # Use the new 'command' input
+          command: "buildozer android release"
           
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.keystore
