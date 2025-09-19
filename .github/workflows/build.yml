@@ -94,3 +94,11 @@ jobs:
           name: package
           path: bin/*.aab # or bin/*.apk for debug builds
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: bin/*
+
+
+
