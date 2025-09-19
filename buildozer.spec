@@ -50,7 +50,7 @@ requirements = python3,kivy,cython,pyjnius
 presplash.filename = %(source.dir)s/assets/images/optimal_logo.jpg
 
 # (str) Icon of the application
-icon.filename = %(source.dir)s/assets/images/app_logo.jpg
+#icon.filename = %(source.dir)s/assets/images/app_logo.jpg
 
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
