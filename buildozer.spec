@@ -322,10 +322,8 @@ android.allow_backup = True
 android.release = True
 android.release_keystore = myapp.jks
 android.release_keyalias = myalias
-android.release = debug = False
 android.store_password = 838875
 android.key_password = 838875
-android.release = debug = False
 
 
 #
