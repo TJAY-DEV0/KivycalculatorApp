@@ -39,6 +39,7 @@ jobs:
             autoconf-archive \
             libtool \
             libtool-bin \
+            libltdl-dev \
             pkg-config \
             zlib1g-dev \
             libncurses5-dev \
@@ -46,6 +47,7 @@ jobs:
             liblzma-dev \
             libffi-dev \
             libssl-dev
+
 
 
 
