@@ -103,6 +103,9 @@ android.permissions = android.permission.INTERNET, (name=android.permission.WRIT
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
 
+
+android.ndk = 26b
+
 # (int) Target Android API, should be as high as possible.
 android.api = 34
 
