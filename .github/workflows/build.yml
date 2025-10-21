@@ -69,8 +69,11 @@ jobs:
             buildozer android debug
           fi
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      # 🆕 Upload built APK(s) to Google Drive
+      - name: Upload APK to Google Drive
+        uses: Jaimss/github-upload-to-drive@v2
         with:
-          name: package
-          path: bin/*
+          target: bin/
+          credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
+          # folderId: 
+1Ntf_70XPHo64cyVQBdPTWXCnskz9Byw6
