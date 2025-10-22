@@ -75,5 +75,4 @@ jobs:
         with:
           target: bin/
           credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
-          folderId: 
-1Ntf_70XPHo64cyVQBdPTWXCnskz9Byw6
+          folderId: 1Ntf_70XPHo64cyVQBdPTWXCnskz9Byw6
