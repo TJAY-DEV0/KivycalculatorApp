@@ -70,9 +70,10 @@ jobs:
           fi
 
       # 🆕 Upload built APK(s) to Google Drive
-      - name: Upload APK to Google Drive
+      - name: Upload to Google Drive
         uses: Jodebu/upload-to-drive@v1
         with:
-          credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
-          folderId: 1Ntf_70XPHo64cyVQBdPTWXCnskz9Byw6
-          filename: bin/*.apk
+          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+          folder: 1AbCdeFgHijk12345      # ✅ same as folderId before
+          name: myapp-release.apk        # ✅ same as filename before
+          target: ./bin/myapp-release.apk  # ✅ local path to your .apk file
