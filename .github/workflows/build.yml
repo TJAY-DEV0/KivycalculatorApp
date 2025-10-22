@@ -74,6 +74,6 @@ jobs:
         uses: Jodebu/upload-to-drive@v1
         with:
           credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
-          folder: 1AbCdeFgHijk12345      # ✅ same as folderId before
-          name: myapp-release.apk        # ✅ same as filename before
+          folder: 1AbCdeFgHijk12345
+          name: myapp-release.apk
           target: ./bin/myapp-release.apk  # ✅ local path to your .apk file
