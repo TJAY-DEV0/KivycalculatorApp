@@ -70,10 +70,13 @@ jobs:
           fi
 
       # 🆕 Upload built APK(s) to Google Drive
+      - name: Decode Google credentials
+        run: echo "${{ secrets.GDRIVE_CREDENTIALS_B64 }}" | base64 --decode > key.json
+
       - name: Upload to Google Drive
         uses: Jodebu/upload-to-drive@v1
         with:
-          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
-          folder: 1AbCdeFgHijk12345
+          credentials: key.json
+          folder: 1Ntf_70XPHo64cyVQBdPTWXCnskz9Byw6
           name: myapp-release.apk
-          target: ./bin/myapp-release.apk  # ✅ local path to your .apk file
+          target: ./bin/myapp-release.apk
