@@ -33,6 +33,12 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-key.jks
 
+      - name: Install and link system libffi
+        run: |
+          sudo apt install -y libffi-dev libffi8
+          export LDFLAGS="-L/usr/lib/x86_64-linux-gnu"
+          export CFLAGS="-I/usr/include/x86_64-linux-gnu"
+
       - name: Build release APK
         run: |
           buildozer android release
