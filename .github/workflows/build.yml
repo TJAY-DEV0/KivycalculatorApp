@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # ✅ safer than ubuntu-latest (24.04 causes autoconf issues)
 
     steps:
       - name: Checkout repository
@@ -23,13 +23,19 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer
-          pip install python-for-android==2023.10.16
+          pip install python-for-android==2023.9.16
+
+      - name: Install and link system libffi
+        run: |
+          sudo apt update
+          sudo apt install -y libffi-dev libffi8
+          export LDFLAGS="-L/usr/lib/x86_64-linux-gnu"
+          export CFLAGS="-I/usr/include/x86_64-linux-gnu"
 
       - name: Restore keystore from secrets
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-key.jks
 
-      
       - name: Build release APK
         run: |
           buildozer android release
