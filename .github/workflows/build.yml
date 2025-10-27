@@ -19,26 +19,17 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install system dependencies
+      - name: Install Python and Buildozer
         run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip \
-                              libffi-dev libssl-dev autoconf libtool pkg-config \
-                              zlib1g-dev libncurses5-dev libncursesw5-dev cmake
-          sudo apt install -y libtinfo5 || sudo apt install -y libtinfo6
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer
+          pip install python-for-android==2023.10.16
 
       - name: Restore keystore from secrets
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-key.jks
 
-      - name: Install and link system libffi
-        run: |
-          sudo apt install -y libffi-dev libffi8
-          export LDFLAGS="-L/usr/lib/x86_64-linux-gnu"
-          export CFLAGS="-I/usr/include/x86_64-linux-gnu"
-
+      
       - name: Build release APK
         run: |
           buildozer android release
