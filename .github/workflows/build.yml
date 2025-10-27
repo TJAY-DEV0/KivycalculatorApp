@@ -1,76 +1,59 @@
-name: Build Kivy Android App    
-    
-on:    
-  push:    
-    branches:    
-      - main    
-    tags:    
-      - 'v*.*.*'    
-    
-jobs:    
-  build-android:    
-    runs-on: ubuntu-latest    
-    steps:    
-      - name: Checkout repository    
-        uses: actions/checkout@v4    
-    
-      - name: Set up Java    
-        uses: actions/setup-java@v4    
-        with:    
-          distribution: 'zulu'    
-          java-version: '17'    
-    
-      - name: Set up Python    
-        uses: actions/setup-python@v5    
-        with:    
-          python-version: '3.10'    
-    
-      - name: Install system dependencies    
-        run: |    
-          sudo apt-get update    
-          sudo apt-get install -y \    
-            git \    
-            zip \    
-            unzip \    
-            build-essential \    
-            autoconf \    
-            autoconf-archive \    
-            libtool \    
-            libtool-bin \    
-            libltdl-dev \    
-            pkg-config \    
-            zlib1g-dev \    
-            libncurses5-dev \    
-            libncursesw5-dev \    
-            liblzma-dev \    
-            libffi-dev \    
-            libssl-dev    
-    
-      - name: Install Python dependencies    
-        run: |    
-          python3 -m pip install --upgrade pip    
-          pip3 install buildozer cython==0.29.34    
-    
-      - name: Decode Keystore (only for release)    
-        if: startsWith(github.ref, 'refs/tags/v')    
-        run: |    
-          echo "Decoding keystore for release build..."    
-          echo "${{ secrets.ANDROID_KEYSTORE_FILE }}" | base64 --decode > myapp.jks    
-        env:    
-          ANDROID_KEYSTORE_FILE: ${{ secrets.ANDROID_KEYSTORE_FILE }}    
-    
-      - name: Build with Buildozer    
-        run: |    
-          if [[ "${{ github.ref }}" == refs/heads/main ]]; then    
-            echo "Starting release build..."    
-            buildozer android release    
-          else    
-            echo "Starting debug build..."    
-            buildozer android debug    
-          fi    
-    
-      - name: Upload Artifact    
-        uses: actions/upload-artifact@v4    
-        with:    
-          name: package    
-          path: bin/*
+name: Build and Sign Kivy APK (Release)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip \
+                              libffi-dev libssl-dev autoconf libtool pkg-config \
+                              zlib1g-dev libncurses5-dev libncursesw5-dev \
+                              libtinfo5 cmake
+          pip install --upgrade pip
+          pip install Cython==0.29.33 buildozer
+
+      - name: Restore keystore from secrets
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-key.jks
+
+      - name: Build release APK
+        run: |
+          buildozer android release
+
+      - name: Sign the APK
+        run: |
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore release-key.jks \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            bin/*.apk ${{ secrets.KEY_ALIAS }}
+
+      - name: Verify APK signature
+        run: jarsigner -verify -verbose -certs bin/*.apk
+
+      - name: Align APK (optional but recommended)
+        run: |
+          zipalign -v 4 bin/*.apk bin/app-release-signed.apk
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KivyApp-Signed-Release
+          path: bin/app-release-signed.apk
