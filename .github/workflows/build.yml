@@ -24,8 +24,8 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip openjdk-17-jdk python3-pip \
                               libffi-dev libssl-dev autoconf libtool pkg-config \
-                              zlib1g-dev libncurses5-dev libncursesw5-dev \
-                              libtinfo5 cmake
+                              zlib1g-dev libncurses5-dev libncursesw5-dev cmake
+          sudo apt install -y libtinfo5 || sudo apt install -y libtinfo6
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer
 
