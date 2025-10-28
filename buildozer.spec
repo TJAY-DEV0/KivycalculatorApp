@@ -14,7 +14,7 @@ android.ndk_api = 21
 android.minapi = 21
 android.archs = arm64-v8a, armeabi-v7a
 android.accept_sdk_license = True
-android.skip_update = True
+android.skip_update = False
 
 # Optional but good practice
 presplash.filename = %(source.dir)s/assets/images/optimal_logo.jpg
