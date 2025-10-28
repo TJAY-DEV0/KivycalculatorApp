@@ -47,13 +47,9 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 --decode > /home/runner/.keystore/release-key.jks
 
       - name: Build release APK
-        env:
-          JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
         run: |
-          buildozer android release
+           # Patch PyJNIus bug for Python 3
+          sed -i 's/isinstance(arg, long)/isinstance(arg, int)/g' \
+      .buildozer/android/platform/python-for-android/pythonforandroid/recipes/pyjnius/jnius/jnius_utils.pxi || true
 
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: CalculatorApp-Release
-          path: .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/CalculatorApp/bin/*.apk
+          buildozer android release
