@@ -4,52 +4,64 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install system dependencies
+      - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            python3-pip python3-setuptools python3-wheel \
-            libtool libltdl-dev autoconf automake pkg-config \
-            unzip zip git openjdk-17-jdk \
-            zlib1g-dev libncurses5-dev libffi-dev libssl-dev
-          sudo libtoolize --install
-
-      - name: Install Buildozer and dependencies
-        run: |
+          sudo apt-get install -y zipalign openjdk-17-jdk
           pip install --upgrade pip
-          pip install buildozer cython virtualenv
+          pip install Cython==0.29.33 buildozer python-for-android==2024.1.21
 
-      - name: Restore buildozer cache
-        uses: actions/cache@v3
-        with:
-          path: .buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('**/*.py', 'buildozer.spec') }}
-
-      - name: Decode Keystore from Base64
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Restore keystore from secrets
         run: |
-          mkdir -p /home/runner/.keystore
-          echo "$KEYSTORE_BASE64" | base64 --decode > /home/runner/.keystore/release-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-key.jks
+
+      - name: Optional PyJNIus Patch (safety)
+        run: |
+          mkdir -p .buildozer/android/platform/python-for-android
+          echo "Backup patch (in case old pyjnius recipe is fetched)"
+          sed -i 's/isinstance(arg, long)/isinstance(arg, int)/g' \
+            .buildozer/android/platform/python-for-android/pythonforandroid/recipes/pyjnius/jnius/jnius_utils.pxi || true
 
       - name: Build release APK
         run: |
-           # Patch PyJNIus bug for Python 3
-          sed -i 's/isinstance(arg, long)/isinstance(arg, int)/g' \
-      .buildozer/android/platform/python-for-android/pythonforandroid/recipes/pyjnius/jnius/jnius_utils.pxi || true
-
           buildozer android release
+
+      - name: Sign the APK
+        run: |
+          APK_PATH=$(find bin -name "*.apk" | head -n 1)
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore release-key.jks \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            "$APK_PATH" ${{ secrets.KEY_ALIAS }}
+
+      - name: Verify APK signature
+        run: |
+          APK_PATH=$(find bin -name "*.apk" | head -n 1)
+          jarsigner -verify -verbose -certs "$APK_PATH"
+
+      - name: Align APK
+        run: |
+          APK_PATH=$(find bin -name "*.apk" | head -n 1)
+          zipalign -v 4 "$APK_PATH" bin/app-release-signed.apk
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KivyApp-Signed-Release
+          path: bin/app-release-signed.apk
