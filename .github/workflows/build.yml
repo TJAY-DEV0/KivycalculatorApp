@@ -1,8 +1,17 @@
+name: Build Kivy App (Release)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -11,12 +20,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip
           pip install buildozer cython
+          pip install kivy
+          pip install https://github.com/kivy/pyjnius/archive/master.zip
 
-      - name: Install Android SDK Build Tools
+      - name: Build APK (Release)
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "build-tools;36.1.0" "platforms;android-35"
+          buildozer android release
 
-      - name: Build release APK
-        run: buildozer -v android release
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kivy-app-release
+          path: bin/*.apk
