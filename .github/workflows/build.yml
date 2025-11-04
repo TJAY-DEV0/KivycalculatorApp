@@ -1,4 +1,4 @@
-name: Build Kivy App (Release)
+name: Build Android Release (Artifact)
 
 on:
   push:
@@ -10,26 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Decode Keystore secret
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
+    - name: Decode Keystore secret to file
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
-      - name: Build APK (Release)
-        uses: mathjazz/buildozer-action@main
-        with:
-          command: buildozer android release
-          workdir: .
-          buildozer_version: stable
-        env:
-          KEYSTORE_PATH: new-release-key.jks
-          KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    - name: Fix permissions
+      run: sudo chown -R $USER:$USER .
 
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: KivyCalculatorApp-release
-          path: bin/*.apk
+    - name: Build Release APK
+      uses: ArtemSBulgakov/buildozer-action@v1
+      with:
+        command: buildozer android release
+        buildozer_version: stable
+        repository_root: .
+        workdir: .
+      env:
+        KEYSTORE_PATH: new-release-key.jks
+        KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: KivyCalculatorApp-release
+        path: ${{ steps.buildozer.outputs.filename }}
