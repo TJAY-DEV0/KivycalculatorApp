@@ -1,45 +1,40 @@
-name: Android Release Build
+name: Build Kivy APK
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python and Java
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git openjdk-17-jdk zlib1g-dev unzip
+          sudo apt update
+          sudo apt install -y zip unzip openjdk-17-jdk
           pip install --upgrade pip
-          pip install buildozer cython==0.29.36
+          pip install buildozer cython virtualenv
 
-      - name: Add 4GB Swap (Prevent Memory Errors)
+      - name: Set up Android SDK licenses
         run: |
-          sudo swapoff -a || true
-          sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          yes | sdkmanager --licenses || true
 
-      - name: Patch buildozer.spec for Release APK
+      - name: Create keystore
         run: |
-          sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-          sed -i 's/#android.api =.*/android.api = 33/g' buildozer.spec
-          sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          echo "android.release_artifact = apk" >> buildozer.spec
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
       - name: Build Release APK
         env:
@@ -51,10 +46,10 @@ jobs:
           echo "🏗️ Building signed release APK..."
           buildozer -v android release || true
           echo "🔧 Forcing Gradle to assembleRelease instead of bundleRelease..."
-          cd .buildozer/android/platform/build-*/*/ && ./gradlew assembleRelease
+          cd "$(find .buildozer/android/platform -type d -path '*/dists/*' -name 'kivycalculator' | head -n 1)" && ./gradlew assembleRelease
 
-      - name: Upload APK Artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KivyCalculator-Release
-          path: bin/*.apk
+          name: release-apk
+          path: .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/kivycalculator/bin/*.apk
