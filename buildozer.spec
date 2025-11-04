@@ -5,7 +5,7 @@ package.domain = org.tjaydev
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
-requirements = python3,kivy,cython,pyjnius,https://github.com/kivy/pyjnius/archive/master.zip
+requirements = python3,kivy,cython,pyjnius
 orientation = portrait
 fullscreen = 1
 android.permissions = INTERNET
@@ -15,7 +15,7 @@ log_level = 2
 warn_on_root = 0
 
 [android]
-android.release_keystore = my-release-key.jks
+android.release_keystore = new-release-key.jks
 android.release_keyalias = myalias
 android.keyalias_passwd = yourpassword
 android.keystore_passwd = yourpassword
