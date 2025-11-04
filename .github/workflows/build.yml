@@ -30,13 +30,17 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython virtualenv
 
-      - name: Enable swap memory (for large builds)
+      - name: Enable swap memory safely
         run: |
-          echo "🧠 Adding 4GB swap space..."
-          sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          echo "🧠 Ensuring 4GB swap space..."
+          if [ ! -f /swapfile ]; then
+            sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+          else
+            echo "Swapfile already exists, skipping creation."
+          fi
           free -h
 
       - name: Fix p4a branch and Android settings
