@@ -1,27 +1,44 @@
+name: Build on Commit (as Artifact)
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          command: buildozer android release
-          # Add the 'workdir' input to explicitly specify the root directory
-          workdir: . 
-          # Add the 'options' input to run as root user
-          options: --user root 
-        env:
-          # Define your keystore variables here as secrets
-          KEYSTORE_PATH: new-release-key.jks
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-release
-          path: bin/*.apk 
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Cache Buildozer global directory
+      uses: actions/cache@v4
+      with:
+        path: .buildozer_global
+        key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+
+    - name: Decode Keystore secret to file
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
+
+    - name: Build with Buildozer for release
+      # USE THIS SPECIFIC COMMIT SHA instead of @v1
+      uses: ArtemSBulgakov/buildozer-action@a82046f5053f101f35e826b528f14207943564a2
+      id: buildozer
+      with:
+        command: buildozer android release
+        buildozer_version: stable
+      env:
+        KEYSTORE_PATH: new-release-key.jks
+        KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: KivyCalculatorApp-release-build
+        path: ${{ steps.buildozer.outputs.filename }}
+
