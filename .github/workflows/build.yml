@@ -1,10 +1,10 @@
 name: Build Kivy App (Release)
 
 on:
-  workflow_dispatch:  # allows you to run manually from GitHub Actions tab
+  workflow_dispatch:  # allows you to run manually
   push:
     branches:
-      - main  # or master, depending on your repo
+      - main  # change if your default branch is different
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Environment Variables
         env:
@@ -34,8 +34,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: bin/*.apk
