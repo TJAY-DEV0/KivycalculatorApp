@@ -17,39 +17,39 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk
+          sudo apt install -y \
+            zip unzip autoconf automake libtool pkg-config \
+            libffi-dev libssl-dev openjdk-17-jdk
           pip install --upgrade pip
           pip install buildozer cython virtualenv
 
-      - name: Set up Android SDK licenses
+      - name: Accept Android SDK Licenses
         run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
           yes | sdkmanager --licenses || true
 
-      - name: Create keystore
+      - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-key.jks
 
-      - name: Build Release APK
+      - name: Build Signed Release APK
         env:
-          KEYSTORE_PATH: new-release-key.jks
+          KEYSTORE_PATH: release-key.jks
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "🏗️ Building signed release APK..."
-          buildozer -v android release || true
-          echo "🔧 Forcing Gradle to assembleRelease instead of bundleRelease..."
-          cd "$(find .buildozer/android/platform -type d -path '*/dists/*' -name 'kivycalculator' | head -n 1)" && ./gradlew assembleRelease
+          echo "🚀 Starting Buildozer Release Build..."
+          buildozer -v android release
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/kivycalculator/bin/*.apk
+          name: KivyApp-release
+          path: .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/*/bin/*.apk
