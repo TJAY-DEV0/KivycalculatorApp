@@ -1,44 +1,14 @@
-name: Build Kivy App (Release APK)
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Cache Buildozer global directory
-      uses: actions/cache@v4
-      with:
-        path: .buildozer_global
-        key: buildozer-global-${{ hashFiles('buildozer.spec') }}
-
-    - name: Decode Keystore secret to file
-      run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
-
-    # 🧩 Use buildozer-action but skip the chown issue by overriding USER env var
-    - name: Build with Buildozer (release)
-      uses: ArtemSBulgakov/buildozer-action@v1
-      env:
-        USER: root
-        KEYSTORE_PATH: new-release-key.jks
-        KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      with:
-        command: buildozer android release
-        buildozer_version: stable
-        workdir: .
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: KivyCalculatorApp-release
-        path: bin/*.apk
+- name: Build with Buildozer
+  uses: ArtemSBulgakov/buildozer-action@v1
+  with:
+    command: buildozer -v android release
+    buildozer_version: stable
+    repository_root: .
+    workdir: .
+  env:
+    USER: root
+    KEYSTORE_PATH: new-release-key.jks
+    KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+    KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+    KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+  timeout-minutes: 90
