@@ -2,8 +2,7 @@ name: Android Release Build
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -12,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python and Java
         uses: actions/setup-python@v4
@@ -26,7 +25,7 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==0.29.36
 
-      - name: 🧠 Add 4GB Swap
+      - name: Add 4GB Swap (Prevent Memory Errors)
         run: |
           sudo swapoff -a || true
           sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
@@ -35,12 +34,10 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Patch buildozer.spec
+      - name: Patch buildozer.spec for Release APK
         run: |
-          sed -i 's/#p4a.branch =.*/p4a.branch = develop/g' buildozer.spec
-          sed -i 's/python3,kivy/python3,kivy,pyjnius@git+https:\/\/github.com\/kivy\/pyjnius.git@master/g' buildozer.spec
-          sed -i 's/#android.api =.*/android.api = 33/g' buildozer.spec
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+          sed -i 's/#android.api =.*/android.api = 33/g' buildozer.spec
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
           echo "android.release_artifact = apk" >> buildozer.spec
 
@@ -51,10 +48,12 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "🔐 Building signed release APK..."
-          buildozer -v android release
+          echo "🏗️ Building signed release APK..."
+          buildozer -v android release || true
+          echo "🔧 Forcing Gradle to assembleRelease instead of bundleRelease..."
+          cd .buildozer/android/platform/build-*/*/ && ./gradlew assembleRelease
 
-      - name: Upload Release APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: KivyCalculator-Release
