@@ -1,15 +1,13 @@
-name: Build and Release Android App
+name: Build on Commit (as Artifact)
 
 on:
   push:
-    tags:
-      - 'v*' # Triggers the workflow when a tag starting with 'v' is pushed (e.g., v1.0.0)
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Required to create a release and upload assets
 
     steps:
     - name: Checkout repository
@@ -23,7 +21,6 @@ jobs:
 
     - name: Decode Keystore secret to file
       run: |
-        # Decodes the Base64 secret into your specified filename
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
     - name: Build with Buildozer for release
@@ -33,29 +30,13 @@ jobs:
         command: buildozer android release
         buildozer_version: stable
       env:
-        # Pass the path to the decoded keystore file and your other secrets
-        KEYSTORE_PATH: new-release-key.jks # <-- Updated filename here
+        KEYSTORE_PATH: new-release-key.jks
         KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.buildozer.outputs.filename }}
-        asset_name: KivycalculatorApp-${{ github.ref_name }}.${{ steps.buildozer.outputs.filename_extension }}
-        asset_content_type: application/vnd.android.package-archive
+        name: KivyCalculatorApp-release-build
+        path: ${{ steps.buildozer.outputs.filename }}
