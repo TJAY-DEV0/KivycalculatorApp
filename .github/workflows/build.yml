@@ -1,7 +1,6 @@
-name: Build Release APK
+name: Build Kivy App (Release)
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -11,36 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Cache Buildozer global directory
-      uses: actions/cache@v4
-      with:
-        path: .buildozer_global
-        key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+      - name: Decode Keystore secret
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
-    - name: Fix permissions
-      run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+      - name: Build APK (Release)
+        uses: mathjazz/buildozer-action@main
+        with:
+          command: buildozer android release
+          workdir: .
+          buildozer_version: stable
+        env:
+          KEYSTORE_PATH: new-release-key.jks
+          KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-    - name: Decode Keystore secret
-      run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
-
-    - name: Build Release APK
-      uses: ArtemSBulgakov/buildozer-action@v1
-      id: release
-      with:
-        command: buildozer android release
-        buildozer_version: stable
-      env:
-        KEYSTORE_PATH: new-release-key.jks
-        KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-    - name: Upload Release Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: KivyApp-release
-        path: ${{ steps.release.outputs.filename || '**/*.apk' }}
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KivyCalculatorApp-release
+          path: bin/*.apk
