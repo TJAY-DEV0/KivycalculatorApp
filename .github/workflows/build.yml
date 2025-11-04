@@ -24,12 +24,12 @@ jobs:
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
     - name: Build with Buildozer for release
-      # USE THIS SPECIFIC COMMIT SHA instead of @v1
-      uses: ArtemSBulgakov/buildozer-action@a82046f5053f101f35e826b528f14207943564a2
+      uses: ArtemSBulgakov/buildozer-action@v1 # Reverted back to @v1
       id: buildozer
       with:
         command: buildozer android release
         buildozer_version: stable
+        workdir_user: root # <-- Add this line to fix the chown error
       env:
         KEYSTORE_PATH: new-release-key.jks
         KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -41,5 +41,3 @@ jobs:
       with:
         name: KivyCalculatorApp-release-build
         path: ${{ steps.buildozer.outputs.filename }}
-
-
