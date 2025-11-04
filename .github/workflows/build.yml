@@ -1,6 +1,7 @@
-name: Build on Commit (as Artifact)
+name: Build Release APK
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -19,17 +20,16 @@ jobs:
         path: .buildozer_global
         key: buildozer-global-${{ hashFiles('buildozer.spec') }}
 
-    - name: Decode Keystore secret to file
+    - name: Fix permissions
+      run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+
+    - name: Decode Keystore secret
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
-    - name: Fix permissions before build
-      run: |
-        sudo chown -R $USER:$USER $GITHUB_WORKSPACE
-
-    - name: Build with Buildozer for release
+    - name: Build Release APK
       uses: ArtemSBulgakov/buildozer-action@v1
-      id: buildozer
+      id: release
       with:
         command: buildozer android release
         buildozer_version: stable
@@ -39,8 +39,8 @@ jobs:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-    - name: Upload Artifact
+    - name: Upload Release Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: KivyCalculatorApp-release-build
-        path: ${{ steps.buildozer.outputs.filename }}
+        name: KivyApp-release
+        path: ${{ steps.release.outputs.filename || '**/*.apk' }}
