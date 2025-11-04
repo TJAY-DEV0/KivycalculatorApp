@@ -35,26 +35,23 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Patch buildozer.spec for stability
+      - name: Patch buildozer.spec
         run: |
           sed -i 's/#p4a.branch =.*/p4a.branch = develop/g' buildozer.spec
           sed -i 's/python3,kivy/python3,kivy,pyjnius@git+https:\/\/github.com\/kivy\/pyjnius.git@master/g' buildozer.spec
           sed -i 's/#android.api =.*/android.api = 33/g' buildozer.spec
           sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
           sed -i 's/#android.build_tools_version =.*/android.build_tools_version = 34.0.0/g' buildozer.spec
-          sed -i 's/#android.ndk_path =.*/android.ndk_path = \/home\/runner\/.buildozer\/android\/platform\/android-ndk-r25b/g' buildozer.spec
+          echo "android.release_artifact = apk" >> buildozer.spec
 
-      - name: Accept Android SDK Licenses
-        run: yes | buildozer android update || true
-
-      - name: Build Signed Release APK
+      - name: Build Release APK
         env:
           KEYSTORE_PATH: new-release-key.jks
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "🔐 Building Release APK..."
+          echo "🔐 Building signed release APK..."
           buildozer -v android release
 
       - name: Upload Release APK
