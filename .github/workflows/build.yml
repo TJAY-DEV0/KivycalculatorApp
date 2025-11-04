@@ -2,47 +2,40 @@ name: Build Kivy APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y autoconf automake libtool pkg-config zlib1g-dev libffi-dev libssl-dev \
-          libltdl-dev libncurses5 libncurses5-dev libstdc++6 git openjdk-17-jdk unzip
-        pip install --upgrade pip setuptools wheel buildozer cython virtualenv
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y autoconf automake libtool pkg-config zlib1g-dev libffi-dev libssl-dev \
+            libltdl-dev libncurses6 libstdc++6 git openjdk-17-jdk unzip
+          pip install --upgrade pip setuptools wheel buildozer cython virtualenv
 
-    - name: Fix libtool macros (prevents LT_SYS_SYMBOL_USCORE error)
-      run: |
-        autoreconf --install --force || true
-        libtoolize --force --copy || true
-        autoupdate || true
+      - name: Build Release APK
+        env:
+          KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          buildozer android release
 
-    - name: Build release APK
-      env:
-        ANDROIDSDK: ~/.buildozer/android/platform/android-sdk
-        ANDROIDNDK: ~/.buildozer/android/platform/android-ndk-r25b
-        ANDROIDAPI: 31
-        ANDROIDMINAPI: 21
-        JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-        PATH: ~/.local/bin:$PATH
-      run: |
-        buildozer android release --verbose
-
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: KivyCalculator-Release
-        path: bin/*.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KivyCalculatorApp-release
+          path: bin/*.apk
