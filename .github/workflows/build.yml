@@ -23,13 +23,16 @@ jobs:
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
+    - name: Fix permissions before build
+      run: |
+        sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+
     - name: Build with Buildozer for release
-      uses: ArtemSBulgakov/buildozer-action@v1 # Reverted back to @v1
+      uses: ArtemSBulgakov/buildozer-action@v1
       id: buildozer
       with:
         command: buildozer android release
         buildozer_version: stable
-        workdir_user: root # <-- Add this line to fix the chown error
       env:
         KEYSTORE_PATH: new-release-key.jks
         KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
