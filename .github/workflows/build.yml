@@ -1,48 +1,61 @@
-name: Buildozer Android Release
+name: Build and Release Android App
 
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger on new tags like v1.0.0
+      - 'v*' # Triggers the workflow when a tag starting with 'v' is pushed (e.g., v1.0.0)
 
 jobs:
   build:
-    runs-on: ubuntu-latest # Use a Linux runner
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create a release and upload assets
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Cache Buildozer global directory
+      uses: actions/cache@v4
       with:
-        python-version: '3.9' # Specify your Python version
+        path: .buildozer_global
+        key: buildozer-global-${{ hashFiles('buildozer.spec') }}
 
-    - name: Install Buildozer
-      run: pip install buildozer
+    - name: Decode Keystore secret to file
+      run: |
+        # Decodes the Base64 secret into your specified filename
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > new-release-key.jks
 
-    - name: Create buildozer.spec (if not already present)
-      run: buildozer init || true # Initialize if buildozer.spec doesn't exist
-
-    - name: Build Android APK
-      run: buildozer android release # or 'release' for a signed release APK
+    - name: Build with Buildozer for release
+      uses: ArtemSBulgakov/buildozer-action@v1
+      id: buildozer
+      with:
+        command: buildozer android release
+        buildozer_version: stable
       env:
-        # Optional: Set environment variables for Buildozer if needed (e.g., for signing)
-        # KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-        # KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+        # Pass the path to the decoded keystore file and your other secrets
+        KEYSTORE_PATH: new-release-key.jks # <-- Updated filename here
+        KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v4
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: android-apk
-        path: bin/*.apk # Adjust path if your APK is located elsewhere
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
 
-    - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        files: bin/*.apk # Attach the APK to the release
-        name: Release ${{ github.ref_name }}
-        body: |
-          Automated release of ${{ github.ref_name }}
-          Built with Buildozer and GitHub Actions.
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.buildozer.outputs.filename }}
+        asset_name: KivycalculatorApp-${{ github.ref_name }}.${{ steps.buildozer.outputs.filename_extension }}
+        asset_content_type: application/vnd.android.package-archive
