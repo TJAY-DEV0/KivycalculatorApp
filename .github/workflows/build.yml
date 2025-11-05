@@ -5,121 +5,30 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-permissions:
-  contents: read
-
-env:
-  ANDROID_API_LIST: "platforms;android-31 platforms;android-33"
-  BUILD_TOOLS_LIST: "build-tools;31.0.0 build-tools;33.0.0"
-  CMDLINE_TOOLS: "cmdline-tools;latest"
-  ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
-
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 120
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install OS packages (apt) and tools
+      - name: Install dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends \
-            git unzip openjdk-17-jdk-headless zlib1g-dev libffi-dev libssl-dev \
-            autoconf automake libtool pkg-config build-essential liblz4-tool \
-            python3-venv python3-distutils curl
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-venv python3-pip
+          pip install buildozer cython
 
-      - name: Set up Android SDK (cmdline-tools, platforms, build-tools)
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+      - name: Build release
         run: |
-          mkdir -p "${ANDROID_SDK_ROOT}"
-          cd "${ANDROID_SDK_ROOT}"
-          curl -sS https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdline.zip
-          unzip -o /tmp/cmdline.zip -d "${ANDROID_SDK_ROOT}/cmdline-tools"
-          mv "${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools" "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
-          export PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${PATH}"
-          yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
-          sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" ${CMDLINE_TOOLS} ${ANDROID_API_LIST} ${BUILD_TOOLS_LIST} "platform-tools"
-          sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" "ndk;25.2.9519653"
-          sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --list
-
-      - name: Create python venv & install Buildozer + deps
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip setuptools wheel
-          pip install "buildozer==1.5.0" cython
-
-      - name: Create release keystore from secret
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > release-key.jks
-          ls -l release-key.jks
-
-      - name: Add swap (best-effort for heavy builds)
-        run: |
-          SWAPFILE=/swapfile
-          if sudo fallocate -l 4G "$SWAPFILE" 2>/dev/null; then
-            echo "fallocate ok"
-          else
-            echo "fallocate failed, trying dd"
-            sudo dd if=/dev/zero of="$SWAPFILE" bs=1M count=4096 || true
-          fi
-          sudo chmod 600 "$SWAPFILE"
-          sudo mkswap "$SWAPFILE"
-          sudo swapon "$SWAPFILE"
-          free -h
-
-      - name: Prepare buildozer config (copy keystore values into env)
-        env:
-          KEYSTORE_PATH: release-key.jks
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          echo "KEYSTORE_PATH=${KEYSTORE_PATH:-release-key.jks}" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${KEY_ALIAS}" >> $GITHUB_ENV
-          echo "KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${KEY_PASSWORD}" >> $GITHUB_ENV
-
-      - name: Cache .buildozer and python packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./.buildozer
-            ~/.buildozer
-            ~/.cache/pip
-          key: buildozer-cache-${{ runner.os }}-${{ hashFiles('**/buildozer.spec') }}
-          restore-keys: |
-            buildozer-cache-${{ runner.os }}-
-
-      - name: Run Buildozer (release)
-        env:
-          ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
-          ANDROIDNDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
-          ANDROIDAPI: "31"
-          ANDROIDMINAPI: "21"
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-        run: |
-          source .venv/bin/activate
           buildozer -v android release
 
-      - name: Upload APK/AAB artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: KivyCalculator-release
-          path: |
-            bin/*.apk
-            bin/*.aab
-            ./.buildozer/android/platform/build-*/dists/*/bin/*.apk
-            ./.buildozer/android/platform/build-*/dists/*/bin/*.aab
+          name: release-apk
+          path: bin/*.apk
