@@ -1,9 +1,7 @@
-name: Kivy Android Build
+name: Kivy Android Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 jobs:
@@ -11,26 +9,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: Install System Dependencies
+    - name: Install Build Tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          openjdk-17-jdk \
-          build-essential \
-          python3-pip \
-          python3-setuptools \
-          git \
-          zip \
-          unzip \
-          libncurses5
+        sudo apt-get install -y openjdk-17-jdk zipalign
 
     - name: Install Buildozer
       run: pip install buildozer
@@ -38,8 +27,24 @@ jobs:
     - name: Build APK
       run: buildozer android release
 
-    - name: Upload APK Artifact
+    - name: Download Keystore from Secrets
+      run: |
+        echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 -d > release.keystore
+
+    - name: Sign APK
+      run: |
+        jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 \
+          -keystore release.keystore \
+          -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+          -keypass ${{ secrets.KEY_ALIAS_PASSWORD }} \
+          bin/yourapp-release-unsigned.apk ${{ secrets.KEY_ALIAS }}
+
+    - name: Zipalign APK
+      run: |
+        zipalign -v 4 bin/yourapp-release-unsigned.apk bin/yourapp-release.apk
+
+    - name: Upload Signed APK
       uses: actions/upload-artifact@v4
       with:
-        name: release-apk
-        path: bin/*.apk
+        name: signed-release-apk
+        path: bin/yourapp-release.apk
