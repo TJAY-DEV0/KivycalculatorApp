@@ -1,6 +1,9 @@
 name: Build Android APK (Docker)
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -8,13 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Pull Buildozer Docker image
-        run: |
-          docker pull kivy/buildozer:latest
+      - name: Pull Docker image
+        run: docker pull kivy/buildozer:latest
 
-      - name: Verify image
+      - name: Check Buildozer version
         run: |
-          docker images
+          docker run --rm kivy/buildozer buildozer --version
