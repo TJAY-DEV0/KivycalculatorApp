@@ -18,4 +18,4 @@ jobs:
 
       - name: Check Buildozer version
         run: |
-          docker run --rm kivy/buildozer buildozer --version
+          docker run --rm -e BUILDOZER_ALLOW_ROOT=1 kivy/buildozer buildozer --version
