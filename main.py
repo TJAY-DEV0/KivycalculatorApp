@@ -24,31 +24,12 @@ import math
 import re
 import os
 import webbrowser
-from jnius import autoclass
 from kivy.utils import platform
 #my .py files
 import files
 import switch
 import check
 from others import RoundedInput,IncrementLabel,RoundedButton,CustomLayout,RoundedLayout,CustomizedLayout,DeleteCustom
-
-def open_browser_android(url):
-   
-    if platform != 'android':
-        return
-
-    PythonActivity = autoclass('org.kivy.android.PythonActivity')
-    Intent = autoclass('android.content.Intent')
-    Uri = autoclass('android.net.Uri')
-
-   
-    current_activity = PythonActivity.mActivity
-
-    
-    intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-
-    
-    current_activity.startActivity(intent)
 
 class MainLayout(BoxLayout):
     def __init__(self,**kwargs):
@@ -616,13 +597,7 @@ App Version: 1.0.0""",size_hint=(1,.5),color=(0,0,0,1),bold=True,font_size=30,po
 
     def open_donation_link(self, instance):
        
-        url = 'https://ko-fi.com/tijaniusman'
-          
-        if platform == 'android':
-            open_browser_android(url)
-        else:
-            import webbrowser
-            webbrowser.open(url)
+        webbrowser.open("https://ko-fi.com/tijaniusman")
 
 
     def switch_screen(self,instance):
