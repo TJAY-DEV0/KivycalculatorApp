@@ -18,4 +18,4 @@ jobs:
 
       - name: Check Buildozer version
         run: |
-          docker run --rm kivy/buildozer sh -c "echo y | buildozer --version"
+           docker run --rm --user user kivy/buildozer buildozer --version
