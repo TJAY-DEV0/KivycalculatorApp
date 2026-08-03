@@ -19,6 +19,7 @@ warn_on_root = 0
 android.api = 33
 android.minapi = 24
 android.ndk = 27b
+android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25b
 
 
 android.release_keystore = new-release-key.jks
