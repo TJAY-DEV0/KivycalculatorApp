@@ -1,30 +1,39 @@
 name: Build Android APK (Docker)
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+
+    container:
+      image: kivy/buildozer:latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-      - name: Build APK with Kivy Buildozer Docker
+      - name: Check Python
         run: |
-          docker run --rm \
-            -v "$PWD":/home/user/hostcwd \
-            -v "$HOME/.buildozer":/home/user/.buildozer \
-            -w /home/user/hostcwd \
-            kivy/buildozer:latest \
-            android release
+          python3 --version
+          python --version
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "cython<3"
+
+      - name: Build APK
+        run: |
+          buildozer android clean
+          buildozer -v android release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: APK
+          name: calculator-apk
           path: bin/*.apk
