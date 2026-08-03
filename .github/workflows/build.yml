@@ -29,7 +29,6 @@ jobs:
 
       - name: Build APK
         run: |
-          buildozer android clean
           buildozer -v android release
 
       - name: Upload APK
