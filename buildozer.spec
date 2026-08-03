@@ -16,9 +16,10 @@ log_level = 2
 warn_on_root = 0
 
 [android]
-android.api = 34
+android.api = 33
 android.minapi = 24
 android.ndk = 27b
+
 
 android.release_keystore = new-release-key.jks
 android.release_keyalias = myalias
